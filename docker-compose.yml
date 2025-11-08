@@ -1,0 +1,42 @@
+services:
+  payroll-app:
+    build: .
+    container_name: payroll-data-structures
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a simple API server for data structures
+  api-server:
+    build: .
+    container_name: payroll-api
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ds:/app/ds
+      - ./api_server.py:/app/api_server.py
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    command: ["python", "api_server.py"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - payroll-app
